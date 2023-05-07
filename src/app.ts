@@ -14,7 +14,7 @@ export class App {
   constructor(
     private logger: LoggerService,
     private userController: UserController,
-    private exceptionHandler: ExceptionError,
+    public exceptionHandler: ExceptionError,
   ) {
     this.app = express();
     this.port = 8000;

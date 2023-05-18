@@ -1,11 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
 
-import type { LoggerService } from '../logger/logger.service';
-import type { ExceptionErrorModel } from './exceptionError.interface';
-import { HttpError } from './http-error';
+import 'reflect-metadata';
+import { LoggerServiceModel } from '../logger/logger.interface.js';
+import { TYPES } from '../types/types.js';
+import type { ExceptionErrorModel } from './exceptionError.interface.js';
+import { HttpError } from './http-error.js';
 
+@injectable()
 export class ExceptionError implements ExceptionErrorModel {
-  constructor(private logger: LoggerService) {}
+  constructor(@inject(TYPES.LoggerServiceModel) private logger: LoggerServiceModel) {}
 
   catch(err: Error | HttpError, req: Request, res: Response, _: NextFunction): void {
     if (err instanceof HttpError) {

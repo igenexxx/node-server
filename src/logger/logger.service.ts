@@ -1,12 +1,13 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+import { injectable } from 'inversify';
 import type { ILogObj } from 'tslog';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { Logger } from 'tslog';
 
-export class LoggerService {
-  private logger: Logger<ILogObj>;
+import 'reflect-metadata';
+import type { LoggerServiceModel } from './logger.interface.js';
+
+@injectable()
+export class LoggerService implements LoggerServiceModel {
+  logger: Logger<ILogObj>;
 
   constructor() {
     this.logger = new Logger({

@@ -21,7 +21,8 @@ export abstract class BaseController {
   protected bindRoutes(routes: RouteModel[]): void {
     routes.forEach((route) => {
       this.logger.log(`Binding route ${route.method.toUpperCase()} ${route.path}`);
-      this.router[route.method](route.path, route.func.bind(this));
+      const middlewares = route.middlewares?.map((m) => m.execute.bind(m));
+      this.router[route.method](route.path, ...(middlewares || []), route.func.bind(this));
     });
   }
 

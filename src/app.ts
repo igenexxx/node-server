@@ -4,6 +4,8 @@ import { inject, injectable } from 'inversify';
 import type { Server } from 'node:http';
 
 import 'reflect-metadata';
+import { ConfigServiceModel } from './config/configService.interface.js';
+import { PrismaService } from './database/prisma.service.js';
 import { ExceptionErrorModel } from './errors/exceptionError.interface.js';
 import { LoggerServiceModel } from './logger/logger.interface.js';
 import { TYPES } from './types/types.js';
@@ -18,23 +20,35 @@ export class App {
   constructor(
     @inject(TYPES.LoggerServiceModel) private logger: LoggerServiceModel,
     @inject(TYPES.UserController) private userController: UserController,
-    @inject(TYPES.ExceptionErrorModel) public exceptionHandler: ExceptionErrorModel,
+    @inject(TYPES.ExceptionErrorModel) private exceptionHandler: ExceptionErrorModel,
+    @inject(TYPES.ConfigService) private configService: ConfigServiceModel,
+    @inject(TYPES.PrismaService) private prismaService: PrismaService,
   ) {
     this.app = express();
-    this.port = 8000;
+    this.port = 3000;
   }
 
-  useRoutes() {
+  useRoutes(): void {
     this.app.use('/users', this.userController.router);
   }
 
-  useExceptionHandler() {
+  useExceptionHandler(): void {
     this.app.use(this.exceptionHandler.catch.bind(this.exceptionHandler));
   }
 
-  init() {
+  useMiddlewares(): void {
+    this.app.use(express.json());
+  }
+
+  async connectDB(): Promise<void> {
+    await this.prismaService.connect();
+  }
+
+  async init(): Promise<void> {
+    this.useMiddlewares();
     this.useRoutes();
     this.useExceptionHandler();
+    await this.connectDB();
     this.server = this.app.listen(this.port);
     this.logger.log(`Server listening on port ${this.port}`);
   }

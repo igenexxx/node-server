@@ -43,21 +43,22 @@ describe('UsersService', () => {
       const password = 'password';
       const salt = '10';
       const userRegisterDto: UserRegisterDto = { email, name, password };
-      const newUser: UserModel = {
-        id: 1,
-        email,
-        name,
-        password: '1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
       usersRepository.find = jest.fn().mockResolvedValue(null);
       configService.get = jest.fn().mockReturnValue(salt);
-      usersRepository.create = jest.fn().mockResolvedValue(newUser);
+      usersRepository.create = jest.fn().mockImplementationOnce(
+        (user: User): UserModel => ({
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          id: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      );
 
       const result = await usersService.createUser(userRegisterDto);
 
-      expect(result).toEqual(newUser);
+      expect(result?.password).not.toBe(password);
       expect(usersRepository.find).toHaveBeenCalledWith(email);
       expect(configService.get).toHaveBeenCalledWith('SALT');
       expect(usersRepository.create).toHaveBeenCalledWith(expect.any(User));

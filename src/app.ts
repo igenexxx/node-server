@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import type { Server } from 'node:http';
 
 import 'reflect-metadata';
+import { AuthMiddleware } from './common/auth.middleware.js';
 import { ConfigServiceModel } from './config/configService.interface.js';
 import { PrismaService } from './database/prisma.service.js';
 import { ExceptionErrorModel } from './errors/exceptionError.interface.js';
@@ -36,6 +37,11 @@ export class App {
     this.app.use(this.exceptionHandler.catch.bind(this.exceptionHandler));
   }
 
+  useAuthMiddleware(): void {
+    const authMiddleware = new AuthMiddleware(this.configService.get('JWT_SECRET'));
+    this.app.use(authMiddleware.execute.bind(authMiddleware));
+  }
+
   useMiddlewares(): void {
     this.app.use(express.json());
   }
@@ -46,6 +52,7 @@ export class App {
 
   async init(): Promise<void> {
     this.useMiddlewares();
+    this.useAuthMiddleware();
     this.useRoutes();
     this.useExceptionHandler();
     await this.connectDB();

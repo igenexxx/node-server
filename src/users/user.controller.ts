@@ -1,8 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
+import jwt from 'jsonwebtoken';
+const { sign } = jwt;
 
 import 'reflect-metadata';
+import { AuthGuard } from '../common/auth.guard.js';
 import { BaseController } from '../common/base.controller.js';
+import { ConfigServiceModel } from '../config/configService.interface.js';
 import { HttpError } from '../errors/http-error.js';
 import { LoggerServiceModel } from '../logger/logger.interface.js';
 import { TYPES } from '../types/types.js';
@@ -17,11 +21,13 @@ export class UserController extends BaseController implements UserControllerMode
   constructor(
     @inject(TYPES.LoggerServiceModel) protected logger: LoggerServiceModel,
     @inject(TYPES.UsersService) private readonly usersService: UsersServiceModel,
+    @inject(TYPES.ConfigService) private readonly configService: ConfigServiceModel,
   ) {
     super(logger);
     this.bindRoutes([
       { path: '/register', method: 'post', func: this.register, middlewares: registerValidators },
       { path: '/login', method: 'post', func: this.login, middlewares: loginValidators },
+      { path: '/info', method: 'get', func: this.info, middlewares: [new AuthGuard()] },
     ]);
   }
 
@@ -29,7 +35,8 @@ export class UserController extends BaseController implements UserControllerMode
     const result = await this.usersService.validateUser(body);
 
     if (result) {
-      this.ok(res, { message: 'Login success' });
+      const token = await this.signJWT(body.email, this.configService.get('JWT_SECRET'));
+      this.ok(res, { message: 'Login success', token });
     } else {
       next(new HttpError(401, 'Wrong email or password'));
     }
@@ -48,5 +55,34 @@ export class UserController extends BaseController implements UserControllerMode
     } else {
       next(new HttpError(422, 'User already exists'));
     }
+  }
+
+  async info({ user }: Request, res: Response, next: NextFunction): Promise<void> {
+    if (user) {
+      const userInfo = await this.usersService.getUserInfo(user);
+      this.ok(res, { email: userInfo?.email, name: userInfo?.name });
+    } else {
+      next(new HttpError(404, 'User not found'));
+    }
+  }
+
+  private signJWT(email: string, secret: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      sign(
+        { email, iat: Math.floor(Date.now() / 1000) },
+        secret,
+        {
+          expiresIn: '1h',
+          algorithm: 'HS256',
+        },
+        (err, token) => {
+          if (err) {
+            reject(err);
+          }
+
+          resolve(token as string);
+        },
+      );
+    });
   }
 }

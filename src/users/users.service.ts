@@ -32,4 +32,8 @@ export class UsersService implements UsersServiceModel {
       return new User(user.email, user.name as string, user.password).comparePassword(password);
     });
   }
+
+  async getUserInfo(email: string): Promise<UserModel | null> {
+    return await this.usersRepository.find(email);
+  }
 }

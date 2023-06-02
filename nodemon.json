@@ -4,6 +4,6 @@
   "ignore": ["src/**/*.spec.ts"],
   "exec": "ts-node",
   "execMap": {
-    "ts": "node --loader ts-node/esm"
+    "ts": "node --files --loader ts-node/esm"
   }
 }

@@ -2,5 +2,8 @@
   "preset": "ts-jest",
   "testEnvironment": "node",
   "setupFiles": ["dotenv/config"],
-  "testTimeout": 5000
+  "testTimeout": 5000,
+  "verbose": true,
+  "modulePaths": ["src"],
+  "resolver": "ts-jest-resolver"
 }

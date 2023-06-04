@@ -4,6 +4,7 @@ import { Container } from 'inversify';
 import 'reflect-metadata';
 import type { ConfigServiceModel } from '../config/configService.interface.js';
 import { TYPES } from '../types/types.js';
+import type { UserLoginDto } from './dto/user-login.dto.js';
 import type { UserRegisterDto } from './dto/user-register.dto.js';
 import { User } from './user.entity.js';
 import { UsersService } from './users.service.js';
@@ -84,6 +85,64 @@ describe('UsersService', () => {
       expect(result).toBeNull();
       expect(usersRepository.find).toHaveBeenCalledWith(email);
       expect(usersRepository.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('validateUser', () => {
+    it('should return the user if the email and password are correct', async () => {
+      const email = 'test@example.com';
+      const password = 'password';
+      const salt = '10';
+      const userLoginDto: UserLoginDto = { email, password };
+      const user: UserModel = {
+        id: 1,
+        email,
+        name: 'Test User',
+        password: '$2a$10$6l.FJKUb1bYmEdjXspw0y.HTHE7pdLmqWcIjnGoAghgAXC6A0vt3e',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      usersRepository.find = jest.fn().mockResolvedValue(user);
+      configService.get = jest.fn().mockReturnValue(salt);
+
+      const result = await usersService.validateUser(userLoginDto);
+
+      expect(result).toBeTruthy();
+      expect(usersRepository.find).toHaveBeenCalledWith(email);
+    });
+
+    it('should return null if the email is incorrect', async () => {
+      const email = 'test@example.com';
+      const password = 'password';
+      const userLoginDto: UserLoginDto = { email, password };
+      usersRepository.find = jest.fn().mockResolvedValue(null);
+
+      const result = await usersService.validateUser(userLoginDto);
+
+      expect(result).toBeFalsy();
+      expect(usersRepository.find).toHaveBeenCalledWith(email);
+    });
+
+    it('should return null if the password is incorrect', async () => {
+      const email = 'test@example.com';
+      const password = 'password';
+      const salt = '10';
+      const userLoginDto: UserLoginDto = { email, password };
+      const user: UserModel = {
+        id: 1,
+        email,
+        name: 'Test User',
+        password: 'wrongPassword',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      usersRepository.find = jest.fn().mockResolvedValue(user);
+      configService.get = jest.fn().mockReturnValue(salt);
+
+      const result = await usersService.validateUser(userLoginDto);
+
+      expect(result).toBeFalsy();
+      expect(usersRepository.find).toHaveBeenCalledWith(email);
     });
   });
 });

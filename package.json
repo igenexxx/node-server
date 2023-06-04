@@ -14,7 +14,8 @@
     "build": "tsc",
     "lint": "eslint --ext .ts src",
     "lint:fix": "lint-staged",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "jest --config ./jest-e2e.config.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,7 @@
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/supertest": "^2.0.12",
     "@types/node": "^20.1.0",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
@@ -57,6 +59,7 @@
     "inversify": "^6.0.1",
     "jsonwebtoken": "^9.0.0",
     "reflect-metadata": "^0.1.13",
+    "supertest": "^6.3.3",
     "tslog": "^4.8.2"
   }
 }
